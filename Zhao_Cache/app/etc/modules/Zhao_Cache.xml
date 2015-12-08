@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Zhao_Cache>
+            <active>true</active>
+            <codePool>community</codePool>
+        </Zhao_Cache>
+    </modules>
+</config>

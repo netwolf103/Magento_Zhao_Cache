@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package>
+    <name>Zhao_Cache</name>
+    <version>1.0.0</version>
+    <stability>stable</stability>
+    <license uri="http://opensource.org/licenses/osl-3.0.php">Open Software License (OSL)</license>
+    <channel>community</channel>
+    <extends/>
+    <summary>This is a system to speed up the module, page CMS, category catalog, product and other page response speed of 50% or more.</summary>
+    <description>This is a system to speed up the module, page CMS, category catalog, product and other page response speed of 50% or more.</description>
+    <notes>None</notes>
+    <authors><author><name>Zhang Zhao</name><user>netwolf103</user><email>netwolf103@gmail.com</email></author></authors>
+    <date>2015-12-08</date>
+    <time>05:34:04</time>
+    <contents><target name="magecommunity"><dir name="Zhao"><dir name="Cache"><dir name="Helper"><file name="Data.php" hash="d5350fb44e14532c0fa1beba1e7a1053"/></dir><dir name="Model"><file name="Abstruct.php" hash="f947b2b56b03ed81df8eb408dc6251ae"/><dir name="Adminhtml"><dir name="Catalog"><file name="Category.php" hash="883c228324591d16cef7ea4d4ce6927a"/><file name="Product.php" hash="7e9fa50f935fd233e979171beadc8607"/></dir><dir name="Cms"><file name="Page.php" hash="da93bfdc47957d99cf2e5b4d1571741f"/></dir><dir name="System"><file name="Config.php" hash="45ccb71f237a7373c020dde9549b04f5"/></dir></dir><dir name="Catalog"><dir name="Category"><file name="View.php" hash="7056c8ad44f5d3145c557f1ca4c050ba"/></dir><dir name="Product"><file name="View.php" hash="6fd4497b55c3c26591c84a54557e66b3"/></dir></dir><dir name="Cms"><dir name="Page"><file name="View.php" hash="0980d6b2394a9ba1b64dfefbdd61c714"/></dir></dir></dir><dir name="etc"><file name="code.xml" hash="7fb5d5ec5468d6cf6fc592f527e5a578"/><file name="config.xml" hash="bd9f99b72ca7495863b7721907d50832"/><file name="system.xml" hash="0b08e46356967ec0e6fba9ee20551144"/></dir></dir></dir></target><target name="mageetc"><dir name="modules"><file name="Zhao_Cache.xml" hash="39e0a2b99ccf841ef6318cb49773c719"/></dir></target></contents>
+    <compatible/>
+    <dependencies><required><php><min>5.4.0</min><max>6.0.0</max></php></required></dependencies>
+</package>
