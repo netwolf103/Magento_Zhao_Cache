@@ -50,6 +50,7 @@
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
+							<comment><![CDATA[<strong style="color:red">Warning!</strong>如果您在使用过程中遇到任何问题，可以通过以下链接联系到我。<a href="https://github.com/netwolf103/magento-extension/wiki/%E5%A6%82%E4%BD%95%E5%AE%89%E8%A3%85%EF%BC%9F" target="_blank">联系我</a>]]></comment>
                         </catalog_product_enabled>
                     </fields>
                 </config>
