@@ -13,7 +13,7 @@ interface PageSpeedInterface{
 	public function get($name, $default);
 }
 
-abstract class PageSpeedAbstruct implements PageSpeedInterface{
+abstract class PageSpeedAbstract implements PageSpeedInterface{
 	protected $_vars = array();
 
 	public function set($name, $var)
@@ -29,7 +29,7 @@ abstract class PageSpeedAbstruct implements PageSpeedInterface{
 
 class PageSpeedRequestException extends Exception{}
 
-final class PageSpeedConfig extends PageSpeedAbstruct
+final class PageSpeedConfig extends PageSpeedAbstract
 {
 	const CACHE_PATH = 'cache';	
 	const BUFFER_POOL = 'html';	
@@ -51,7 +51,7 @@ final class PageSpeedConfig extends PageSpeedAbstruct
 	}
 }
 
-final class PageSpeedMage extends PageSpeedAbstruct
+final class PageSpeedMage extends PageSpeedAbstract
 {
 	public static $_xml = null;
 
@@ -82,7 +82,7 @@ final class PageSpeedMage extends PageSpeedAbstruct
 	}
 }
 
-final class PageSpeedRequest extends PageSpeedAbstruct
+final class PageSpeedRequest extends PageSpeedAbstract
 {
 	protected static $mobileAgents = Array(
 			"mqqbrowser",
@@ -137,7 +137,7 @@ final class PageSpeedRequest extends PageSpeedAbstruct
 	}
 }
 
-class PageSpeedCache extends PageSpeedAbstruct
+class PageSpeedCache extends PageSpeedAbstract
 {
 
 	public static function read()

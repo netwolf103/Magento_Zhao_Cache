@@ -1,5 +1,5 @@
 <?php
-class Zhao_Cache_Model_Cms_Page_View extends Zhao_Cache_Model_Abstruct
+class Zhao_Cache_Model_Cms_Page_View extends Zhao_Cache_Model_Abstract
 {
 	protected  $config_path = 'zhaocache/config/cmspage_enabled';
 

@@ -1,5 +1,5 @@
 <?php
-class Zhao_Cache_Model_Adminhtml_System_Config extends Zhao_Cache_Model_Abstruct
+class Zhao_Cache_Model_Adminhtml_System_Config extends Zhao_Cache_Model_Abstract
 {
 	// code xml file
 	const CODE_XML_NAME = 'code.xml';

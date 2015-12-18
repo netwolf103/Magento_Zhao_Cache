@@ -1,5 +1,5 @@
 <?php
-class Zhao_Cache_Model_Abstruct
+class Zhao_Cache_Model_Abstract
 {
 	// Cache root path name
 	const CACHE_ROOT_DIR		= 'cache';

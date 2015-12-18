@@ -1,5 +1,5 @@
 <?php
-class Zhao_Cache_Model_Catalog_Product_View extends Zhao_Cache_Model_Abstruct
+class Zhao_Cache_Model_Catalog_Product_View extends Zhao_Cache_Model_Abstract
 {
 	protected  $config_path = 'zhaocache/config/catalog_product_enabled';
 
