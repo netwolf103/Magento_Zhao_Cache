@@ -1,0 +1,4 @@
+<?php
+class Jeulia_Cache_Model_Memcache_Cms_Index_Index extends Jeulia_Cache_Model_Memcache_Cms_Page_View
+{
+}

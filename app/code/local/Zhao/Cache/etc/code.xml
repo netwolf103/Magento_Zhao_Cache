@@ -1,0 +1,484 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Zhao_Cache>
+            <version>0.1.0</version>
+        </Zhao_Cache>
+    </modules>
+
+	<global>
+		<code><mage><![CDATA[
+if (isset($_SERVER['SCRIPT_FILENAME']) && is_link($_SERVER['SCRIPT_FILENAME'])) {
+    define('BPCACHE', dirname($_SERVER['SCRIPT_FILENAME']));
+} else {
+    define('BPCACHE', dirname(__FILE__));
+}
+
+// Configure include path
+$paths = array();
+$paths[] = BPCACHE . DIRECTORY_SEPARATOR . 'lib';
+
+
+$appPath = implode(PATH_SEPARATOR, $paths);
+set_include_path($appPath .PATH_SEPARATOR. get_include_path());
+
+// Register autoload
+spl_autoload_register(function($class) {
+    $classFile = str_replace('\\', '/', $class, $count);
+    if (!$count) {
+        $classFile = str_replace(' ', DIRECTORY_SEPARATOR, ucwords(str_replace('_', ' ', $class)));
+    }
+    $classFile .= '.php';
+    include $classFile;
+});
+
+interface PageSpeedInterface{
+	public function set($name, $var);
+	public function get($name, $default);
+}
+
+abstract class PageSpeedAbstruct implements PageSpeedInterface{
+	protected $_vars = array();
+
+	public function set($name, $var)
+	{
+		$this->_vars[$name] = $var;
+	}
+
+	public function get($name, $var = null)
+	{
+		return isset( $this->_vars[$name] ) ? $this->_vars[$name] : $default;
+	}
+}
+
+class PageSpeedRequestException extends Exception{}
+
+class PageSpeed_Cache_Backend_File extends Zend_Cache_Backend_File
+{
+
+    public function __construct(array $options = array())
+    {
+        $this->_options['cache_dir'] = BPCACHE .DIRECTORY_SEPARATOR. 'var' .DIRECTORY_SEPARATOR. 'cache';
+        $this->_options['read_control'] = false;
+        $this->_options['file_name_prefix'] = 'mage';
+        $this->_options['hashed_directory_level'] = 1;
+        $this->_options['hashed_directory_perm'] = 0770;
+
+        parent::__construct($options);
+    }
+}
+
+final class PageSpeedConfig extends PageSpeedAbstruct
+{
+	const CACHE_PATH = 'cache';	
+	const MAGE_XML = 'Mage.xml';
+
+	public static function getPath()
+	{
+		return getcwd() .DIRECTORY_SEPARATOR. self::CACHE_PATH;
+	}
+
+	public static function getMageXml()
+	{
+		return self::getPath() .DIRECTORY_SEPARATOR. self::MAGE_XML;
+	}
+
+    public static function getEtcDir()
+    {
+        return getcwd() .DIRECTORY_SEPARATOR. 'app' .DIRECTORY_SEPARATOR. 'etc';       
+    }
+}
+
+final class PageSpeedMage extends PageSpeedAbstruct
+{
+	private static $_config;
+	private static $_cache;
+	
+	public static function instance() 
+	{
+        if (!self::$_config) {
+
+			if( !file_exists( PageSpeedConfig::getMageXml() ) ) {
+				throw new PageSpeedRequestException('Mage.xml not exists.');
+			}
+
+            self::$_config = new Varien_Simplexml_Config();
+
+            self::$_config->loadFile(PageSpeedConfig::getMageXml());
+        }
+
+        return self::$_config; 			
+	}
+
+	public static function adminRoute()
+	{
+		self::instance();
+		return (string) self::$_config->getNode('admin/routers/adminhtml/args/frontName');
+	}
+
+	public static function defaultCurrencyCode()
+	{
+		self::instance();
+		return (string) self::$_config->getNode('default/currency/options/default');
+	}
+
+	public static function defaultStoreCode()
+	{
+		self::instance();
+		return (string) self::$_config->getNode('default/store/value');
+	}
+
+	public static function getHttponly()
+	{
+        self::instance();
+		$httponly = (string) self::$_config->getNode('default/web/cookie/cookie_httponly');
+
+        if (is_null($httponly)) {
+            return null;
+        }
+        return (bool)$httponly;
+	}
+
+	public static function getLifetime()
+	{
+        self::instance();
+		$lifetime = (string) self::$_config->getNode('default/web/cookie/cookie_lifetime');
+
+        if (!is_numeric($lifetime)) {
+            $lifetime = 3600;
+        }
+
+        return $lifetime;
+	}
+
+	public static function getPath()
+	{
+        self::instance();
+		$path = (string) self::$_config->getNode('default/web/cookie/cookie_path');
+
+        if (empty($path)) {
+
+            $scriptName = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '';
+
+			$path = dirname($scriptName);
+        }
+
+        return $path;
+	}
+
+	public static function getDomain()
+	{
+        self::instance();
+		$domain = (string) self::$_config->getNode('default/web/cookie/cookie_domain');
+
+        if (empty($domain)) {
+            $domain = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+        }
+        return $domain;
+	}
+
+	public static function getCache()
+	{
+		self::instance();
+
+         if (!self::$_cache) {
+            
+            $class = (string) self::$_config->getNode('global/cache/backend');
+
+			if( empty($class) ) {
+				 self::$_cache = new PageSpeed_Cache_Backend_File();
+			} else{
+
+                if( is_object(self::$_config->getNode('global/cache/backend_options')) ) {
+                    $options = self::$_config->getNode('global/cache/backend_options')->asArray();
+                } else {
+                    $options = array();
+                }
+                
+                self::$_cache = new $class($options);               
+            }
+        }
+
+        return self::$_cache;
+	}
+}
+
+final class PageSpeedRequest extends PageSpeedAbstruct
+{
+	protected static $mobileAgents = Array(
+			"mqqbrowser",
+			"opera mobi",
+			"juc","iuc",
+			"fennec","ios","applewebKit/420","applewebkit/525","applewebkit/532","ipad","iphone","ipaq","ipod",
+			"iemobile", "windows ce",//windows phone
+			"240x320","480x640","acer","android","anywhereyougo.com","asus","audio","blackberry",
+			"blazer","coolpad" ,"dopod", "etouch", "hitachi","htc","huawei", "jbrowser", "lenovo",
+			"lg","lg-","lge-","lge", "mobi","moto","nokia","phone","samsung","sony",
+			"symbian","tablet","tianyu","wap","xda","xde","zte"
+	);
+
+	public static function env($key)
+	{
+		return isset( $_SERVER[$key] ) ? $_SERVER[$key] : false;	
+	}
+
+	public static function cookie($key)
+	{
+		return isset( $_COOKIE[$key] ) ? $_COOKIE[$key] : false;	
+	}
+
+	public static function getCurrentURL()
+	{
+		return (self::env('SERVER_PORT') == 443 ? 'https://' : "http://") . self::env('HTTP_HOST') . self::env('REQUEST_URI');
+	}
+
+	public static function getCurrencyCode()
+	{
+		return self::cookie('currency') ? self::cookie('currency') : PageSpeedMage::defaultCurrencyCode();
+	}
+
+	public static function getStore()
+	{
+		if( isset($_GET['___store']) && !empty($_GET['___store']) ) {
+			setcookie('store', $_GET['___store'], time() + PageSpeedMage::getLifetime(), PageSpeedMage::getPath(), PageSpeedMage::getDomain(), false, PageSpeedMage::getHttponly());
+
+			$_COOKIE['store'] = $_GET['___store'];
+		}
+
+		return self::cookie('store') ? self::cookie('store') : PageSpeedMage::defaultStoreCode();
+	}
+
+	public static function hasMobileRequest(){
+		$user_agent = self::env('HTTP_USER_AGENT');
+
+		$bool = false;
+
+		foreach (self::$mobileAgents as $device) {
+			if (stristr($user_agent, $device)) {
+				$bool = true;
+				break;
+			}
+		}
+
+		return $bool;		
+	}
+
+	public static function hasBackendRequest()
+	{
+		return (bool) strpos(self::getCurrentURL(), PageSpeedMage::adminRoute());
+	}
+}
+
+class PageSpeedCache extends PageSpeedAbstruct
+{
+
+	public static function read()
+	{
+		if( PageSpeedRequest::hasBackendRequest() ) {
+			throw new PageSpeedRequestException('backend request.');
+		}
+
+        $url = explode('?',  PageSpeedRequest::getCurrentURL(), 2);
+
+        $cacheId = md5($url[0]);
+        if( isset($url[1]) && !empty($url[1]) ) {
+            $cacheId .= '_' . md5($url[1]);
+        }
+
+		$filename = sprintf('%s_ZHAO_CACHE_HTML_%s%s_%s_%s', 
+			substr(md5(PageSpeedConfig::getEtcDir()), 0, 3),
+			$cacheId,
+			PageSpeedRequest::hasMobileRequest() ? '_mobile' : '',
+			PageSpeedRequest::getCurrencyCode(),
+            PageSpeedRequest::getStore()
+		);
+
+        if( !$cache = PageSpeedMage::getCache()->load($filename) ) {
+            throw new PageSpeedRequestException('The cache does not exist.');
+        }
+
+        echo gzuncompress($cache);
+	}
+}
+
+try {
+	PageSpeedCache::read();
+} catch (Exception $e) {
+	include 'index.php';
+}
+		]]></mage>
+			<memcache><![CDATA[
+interface PageSpeedInterface{
+	public function set($name, $var);
+	public function get($name, $default);
+}
+
+abstract class PageSpeedAbstruct implements PageSpeedInterface{
+	protected $_vars = array();
+
+	public function set($name, $var)
+	{
+		$this->_vars[$name] = $var;
+	}
+
+	public function get($name, $var = null)
+	{
+		return isset( $this->_vars[$name] ) ? $this->_vars[$name] : $default;
+	}
+}
+
+class PageSpeedRequestException extends Exception{}
+
+final class PageSpeedConfig extends PageSpeedAbstruct
+{
+	const CACHE_PATH = 'cache';	
+	const BUFFER_POOL = 'html';	
+	const MAGE_XML = 'Mage.xml';
+
+	public static function getPath()
+	{
+		return getcwd() .'/'. self::CACHE_PATH;
+	}
+
+	public static function getBufferPool()
+	{
+		return self::getPath() .'/'. self::BUFFER_POOL;
+	}
+
+	public static function getMageXml()
+	{
+		return self::getPath() .'/'. self::MAGE_XML;
+	}
+}
+
+final class PageSpeedMage extends PageSpeedAbstruct
+{
+	public static $_xml = null;
+
+	static function load()
+	{
+		if (is_null ( self::$_xml ) || isset ( self::$_xml )) {
+
+			if( !file_exists( PageSpeedConfig::getMageXml() ) ) {
+				throw new PageSpeedRequestException('Mage.xml not exists.');
+			}
+			
+			self::$_xml = simplexml_load_file(PageSpeedConfig::getMageXml());
+		}
+
+		return self::$_xml;
+	}
+
+	public static function adminRoute()
+	{
+		self::load();
+		return (string) self::$_xml->admin->routers->adminhtml->args->frontName;
+	}
+
+	public static function defaultCurrencyCode()
+	{
+		self::load();
+		return (string) self::$_xml->default->currency->options->default;
+	}
+}
+
+final class PageSpeedRequest extends PageSpeedAbstruct
+{
+	protected static $mobileAgents = Array(
+			"mqqbrowser",
+			"opera mobi",
+			"juc","iuc",
+			"fennec","ios","applewebKit/420","applewebkit/525","applewebkit/532","ipad","iphone","ipaq","ipod",
+			"iemobile", "windows ce",//windows phone
+			"240x320","480x640","acer","android","anywhereyougo.com","asus","audio","blackberry",
+			"blazer","coolpad" ,"dopod", "etouch", "hitachi","htc","huawei", "jbrowser", "lenovo",
+			"lg","lg-","lge-","lge", "mobi","moto","nokia","phone","samsung","sony",
+			"symbian","tablet","tianyu","wap","xda","xde","zte"
+	);
+
+	public static function env($key)
+	{
+		return isset( $_SERVER[$key] ) ? $_SERVER[$key] : false;	
+	}
+
+	public static function cookie($key)
+	{
+		return isset( $_COOKIE[$key] ) ? $_COOKIE[$key] : false;	
+	}
+
+	public static function getCurrentURL()
+	{
+		return (self::env('SERVER_PORT') == 443 ? 'https://' : "http://") . self::env('HTTP_HOST') . self::env('REQUEST_URI');
+	}
+
+	public static function getCurrencyCode()
+	{
+		return self::cookie('currency') ? self::cookie('currency') : PageSpeedMage::defaultCurrencyCode();
+	}
+
+	public static function hasMobileRequest(){
+		$user_agent = self::env('HTTP_USER_AGENT');
+
+		$bool = false;
+
+		foreach (self::$mobileAgents as $device) {
+			if (stristr($user_agent, $device)) {
+				$bool = true;
+				break;
+			}
+		}
+
+		return $bool;		
+	}
+
+	public static function hasBackendRequest()
+	{
+		return (bool) strpos(self::getCurrentURL(), PageSpeedMage::adminRoute());
+	}
+}
+
+class PageSpeedCache extends PageSpeedAbstruct
+{
+
+	public static function read()
+	{
+		if( PageSpeedRequest::hasBackendRequest() ) {
+			throw new PageSpeedRequestException('backend request.');
+		}
+
+		$cachefile = sprintf('%s%s_%s', 
+			md5(PageSpeedRequest::getCurrentURL()),
+			PageSpeedRequest::hasMobileRequest() ? '_mobile' : '',
+			PageSpeedRequest::getCurrencyCode()
+		);
+
+		if( !$memcache = @memcache_connect(HOST, PORT) ) {
+			throw new PageSpeedRequestException('memcached unable to connect.');
+		}
+
+		$data = $memcache->get('zhaocache_' . md5($cachefile));
+		$memcache->close();
+
+		if( !$data ) {
+			throw new PageSpeedRequestException('cache not exists.');
+		}
+		
+		ob_start("ob_gzhandler");
+		echo gzuncompress($data);
+	}
+}
+
+try {
+	PageSpeedCache::read();
+} catch (Exception $e) {
+	include 'index.php';
+}
+			]]></memcache>
+		</code>
+		<htaccess><![CDATA[
+Order deny,allow
+Deny from all
+		]]></htaccess>
+	</global>
+
+</config>

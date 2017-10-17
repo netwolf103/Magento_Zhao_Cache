@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Zhao_Cache>
+            <version>0.1.0</version>
+        </Zhao_Cache>
+    </modules>
+
+	<global>
+		<zhaocache>
+			<adapter><![CDATA[files]]></adapter>
+		</zhaocache>
+
+        <models>
+            <zhaocache>
+                <class>Zhao_Cache_Model</class>
+            </zhaocache>
+        </models>
+
+		<events>
+            <controller_action_layout_render_before_cms_page_view>
+                <observers>
+                    <zhao_cache_cms_page_view>
+                        <class>Zhao_Cache_Model_Adapter</class>
+                        <method>cache</method>
+                    </zhao_cache_cms_page_view>
+                </observers>
+            </controller_action_layout_render_before_cms_page_view>
+            <controller_action_layout_render_before_cms_index_index>
+                <observers>
+                    <zhao_cache_cms_index_index>
+                        <class>Zhao_Cache_Model_Adapter</class>
+                        <method>cache</method>
+                    </zhao_cache_cms_index_index>
+                </observers>
+            </controller_action_layout_render_before_cms_index_index>
+			<cms_page_prepare_save>
+                <observers>
+                    <zhao_cache_cms_page_prepare_save>
+                        <class>Zhao_Cache_Model_Adapter</class>
+                        <method>ClearCache</method>
+                    </zhao_cache_cms_page_prepare_save>
+                </observers>
+			</cms_page_prepare_save>
+
+
+            <controller_action_layout_render_before_catalog_product_view>
+                <observers>
+                    <zhao_cache_catalog_product_view>
+                        <class>Zhao_Cache_Model_Adapter</class>
+                        <method>cache</method>
+                    </zhao_cache_catalog_product_view>
+                </observers>
+            </controller_action_layout_render_before_catalog_product_view>
+			<catalog_product_prepare_save>
+                <observers>
+                    <zhao_cache_catalog_product_prepare_save>
+                        <class>Zhao_Cache_Model_Adapter</class>
+                        <method>ClearCache</method>
+                    </zhao_cache_catalog_product_prepare_save>
+                </observers>
+			</catalog_product_prepare_save>
+
+            <controller_action_layout_render_before_catalog_category_view>
+                <observers>
+                    <zhao_cache_catalog_category_view>
+                        <class>Zhao_Cache_Model_Adapter</class>
+                        <method>cache</method>
+                    </zhao_cache_catalog_category_view>
+                </observers>
+            </controller_action_layout_render_before_catalog_category_view>
+			<catalog_category_prepare_save>
+                <observers>
+                    <zhao_cache_catalog_category_prepare_save>
+                        <class>Zhao_Cache_Model_Adapter</class>
+                        <method>ClearCache</method>
+                    </zhao_cache_catalog_category_prepare_save>
+                </observers>
+			</catalog_category_prepare_save>
+
+			<admin_system_config_changed_section_zhaocache>
+                <observers>
+                    <zhao_cache_admin_system_config_changed_section_zhaocache>
+                        <class>Zhao_Cache_Model_Adapter</class>
+                        <method>config</method>
+                    </zhao_cache_admin_system_config_changed_section_zhaocache>
+                </observers>				
+			</admin_system_config_changed_section_zhaocache>
+		</events>
+	</global>
+
+    <adminhtml>
+        <acl>
+            <resources>
+                <admin>
+                    <children>
+                        <system>
+                            <children>
+                                <config>
+                                    <children>
+                                        <zhaocache translate="title" module="zhao">
+                                            <title>Zhao Cache Module Section</title>
+                                        </zhaocache>
+                                    </children>
+                                </config>
+                            </children>
+                        </system>
+                    </children>
+                </admin>
+            </resources>
+        </acl>
+    </adminhtml>
+</config>
